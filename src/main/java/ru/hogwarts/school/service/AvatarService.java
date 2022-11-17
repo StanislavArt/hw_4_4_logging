@@ -1,5 +1,7 @@
 package ru.hogwarts.school.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
 @Service
 public class AvatarService {
+	private Logger logger = LoggerFactory.getLogger(AvatarService.class);
     private AvatarRepository avatarRepository;
     private StudentRepository studentRepository;
 
@@ -31,15 +34,18 @@ public class AvatarService {
     }
 
     public void upload(Long studentId, MultipartFile file) throws IOException {
+		logger.info("Method 'upload()' was invoked");
         Student student = studentRepository.findById(studentId).orElse(null);
         if (student == null) {
+			logger.error("Студента с идентификатором '{}' не существует", studentId);
             throw new IOException("Студента с таким идентификатором не существует");
         }
 
         String fileName = file.getOriginalFilename();
         int beginIndex = fileName.lastIndexOf(".");
         if (beginIndex == -1) {
-            throw new IOException("В файле '" + fileName + "' отсутствует расширение");
+            logger.error("В файле '" + fileName + "' отсутствует расширение");
+			throw new IOException("В файле '" + fileName + "' отсутствует расширение");
         }
         Path fullPath = Path.of(dirAvatar, student.getId().toString() + fileName.substring(beginIndex));
 
@@ -64,10 +70,12 @@ public class AvatarService {
     }
 
     public Avatar getAvatar(Long id) {
+		logger.info("Method 'getAvatar()' was invoked");
         return avatarRepository.findByStudentId(id).orElse(null);
     }
 	
 	public List<AvatarRecord> getAll(int pageNumber, int sizeNumber) {
+		logger.info("Method 'getAll()' was invoked");
 		PageRequest pageRequest = PageRequest.of(pageNumber, sizeNumber);
         List<AvatarRecord> content = avatarRepository.findAllBy(pageRequest).getContent();
         return content;
